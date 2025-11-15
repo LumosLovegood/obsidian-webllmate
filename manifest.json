@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "web-llmate",
+	"name": "WebLLMate",
 	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+	"minAppVersion": "1.8.0",
+	"description": "Embed AI chat Web Homepages in Obsidian.",
+	"author": "Lumos",
+	"authorUrl": "https://github.com/LumosLovegood",
+	"fundingUrl": "http://afdian.com/a/lumosmoon",
+	"isDesktopOnly": true
 }
