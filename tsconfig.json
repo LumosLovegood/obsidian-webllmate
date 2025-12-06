@@ -27,7 +27,8 @@
 	"include": [
 		"**/*.ts",
 		"types",
-		"**/*.svelte"
+		"**/*.svelte",
+		"svelte-shims.d.ts"
 	],
 	"exclude": [
 		"node_modules",

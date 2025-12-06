@@ -1,4 +1,3 @@
-// @ts-ignore
 import type {WebViewElement} from './index';
 
 

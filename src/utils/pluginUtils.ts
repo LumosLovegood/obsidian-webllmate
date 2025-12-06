@@ -8,7 +8,7 @@ import {
 } from "obsidian";
 import {fromBuffer} from "file-type";
 import UIUtils from "./ui";
-import WebViewer from "./WebViewer";
+import WebViewer from "./webViewer";
 
 type EnhancedCache = CacheEnhancer & MetadataCache;
 type EnhancedWorkspace = WorkspaceEnhancer & Workspace;

@@ -1,5 +1,4 @@
 import {type WebLLMAdapter} from "../../types";
-// @ts-ignore
 import WebExecutor from "../../utils/webViewer/WebExecutor";
 
 

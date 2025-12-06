@@ -71,7 +71,7 @@ export class LogManager extends EventEmitter2 {
 	private options: LogOptions = {
 		minLevels: {
 			'': 'info',
-			'video-note': 'info',
+			'web-llmate': 'info',
 		},
 	};
 
@@ -313,7 +313,7 @@ export class Logger {
 export function logCallDetails() {
 	return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
 		const originalMethod = descriptor.value;
-		const logger = logging.getLogger('video-note');
+		const logger = logging.getLogger('web-llmate');
 
 		descriptor.value = async function (...args: any[]) {
 			const startTime = new Date(Date.now());
@@ -340,7 +340,7 @@ export function logCallDetails() {
  * @param {string} message
  */
 export function log(logLevel: TLogLevelName, message: string) {
-	const logger = logging.getLogger('video-note');
+	const logger = logging.getLogger('web-llmate');
 
 	switch (logLevel) {
 		case 'trace':
@@ -377,7 +377,7 @@ export function monkeyPatchConsole(plugin: Plugin) {
 		return;
 	}
 
-	const logFile = `${plugin.manifest.dir}/video-note-logs.txt`;
+	const logFile = `${plugin.manifest.dir}/web-llmate-logs.txt`;
 	const logs: string[] = [];
 	const logMessages =
 		(prefix: string) =>
