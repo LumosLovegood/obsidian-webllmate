@@ -33,4 +33,12 @@ export default class Qwen extends BaseGeneralAdapter {
 			.delay(500);
 		return super.showHistory();
 	}
+
+	async onLoad(): Promise<void> {
+		await this.executor
+			.delay(600)
+			.remove("div > [data-icon-type='pcicon-API-line']")
+			.remove("div > [data-icon-type='pcicon-desktop-line']")
+			.done()
+	}
 }

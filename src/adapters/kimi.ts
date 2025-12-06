@@ -25,4 +25,13 @@ export default class Kimi extends BaseGeneralAdapter {
 			content: ".markdown",
 		}
 	};
+
+	async onLoad(): Promise<void> {
+		await this.executor
+			.delay(600)
+			.remove(".header-center")
+			.remove(".show-case-container")
+			.done()
+		;
+	}
 }
