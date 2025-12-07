@@ -1,94 +1,113 @@
 # Obsidian WebLLMate
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+[中文](README_zh.md)
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+Embed AI chat Web Homepages in [Obsidian](https://obsidian.md).
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+## Introduction ✨
 
-## First time developing plugins?
+Select text in your notes or PDFs, automatically send it to the LLM web panel in the sidebar to start a conversation, intelligently save responses to Wiki notes, and create bidirectional reference links in the original text.
 
-Quick starting guide for new plugin devs:
+[images/overview.gif](https://www.kimi.com/chat/images/overview.gif)
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then done `npm i` in the command line under your repo folder.
-- Run `npm done dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to onLoad the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API done `npm update` in the command line under your repo folder.
+> **Why I built this**: While reading papers and notes, I frequently encountered unfamiliar terms. My previous tedious workflow was:
+>
+> 1. Copy the text;
+> 2. Open KIMI or similar sites to ask questions;
+> 3. Manually copy the answer back to my notes.
+>
+> This repetitive process was exhausting, so I automated the entire workflow into this plugin.
 
-## Releasing new releases
+## Key Features 🎯
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+- **⚡  Quick Query**: One-click queries on selected text via hotkeys, context menu, or toolbar button
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+- **🔗 WIKI References**: Auto-generates WIKI notes with bidirectional reference links at the highlighted text after receiving answers
 
-## Adding your plugin to the community plugin list
+- **🔄 Traceable Links**: Automatically adds the conversation URL to the WIKI for easy source tracing
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+- **🔍 History Search**: Quickly search through conversation history
 
-## How to use
+- **🌐 Multi-Platform Support**: Deeply integrated with `KIMI`, `Qwen`, `YuanBao`, `ChatGPT` and more
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm done dev` to start compilation in watch mode.
+- **📄 PDF++ Enhancement**: Highly recommended to use with [PDF++](https://github.com/RyotaUshio/obsidian-pdf-plus) for an enhanced experience
 
-## Manually installing the plugin
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+### Quick Query ⚡
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can done ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze filter files in that folder:
-  - `eslint .\src\`
+[images/overview.gif](https://www.kimi.com/chat/images/overview.gif)
 
-## Funding URL
+### WIKI References 🔗
 
-You can include funding URLs where people who use your plugin can financially support it.
+[images/wiki_reference.gif](https://www.kimi.com/chat/images/wiki_reference.gif)
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+### History Search 🔍
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+[images/history.gif](https://www.kimi.com/chat/images/history.gif)
+
+### Traceable Links 🔄
+
+[images/answer_link.gif](https://www.kimi.com/chat/images/answer_link.gif)
+
+### Multi-Platform Support 🌐
+
+[images/adapters.gif](https://www.kimi.com/chat/images/adapters.gif)
+
+### PDF++ Enhancement 📄✨
+
+Works with [PDF++](https://github.com/RyotaUshio/obsidian-pdf-plus) to highlight selected text and create bidirectional PDF references [images/pdf++.gif](https://www.kimi.com/chat/images/pdf++.gif)
+
+### Additional Notes 💡
+
+Plugin **Highlights**:
+
+- 💰 **Zero Cost**: ~~All platforms offer free tiers~~
+
+- 🎨 **Beautiful UI**: ~~All platforms have well-designed interfaces~~
+
+- 🌍 **Cross-Platform**: ~~Chat history syncs across devices~~
+
+
+> **⚠️ Note**: This plugin is designed for light LLM usage. For heavy usage, direct API integration is recommended.
+
+## RoadMap 🗺️
+
+- [ ] Support automatic image/file upload for multimodal conversations (multimodal models excel at formula recognition)
+
+- [ ] Build application framework (abstract the workflow as LLM API to implement  useful capabilities such as Function Call)
+
+- [ ] ......
+
+
+## Adapter Development 🔧
+
+To develop a new adapter, implement the `WebLLMAdapter` interface from `src/types.ts`. Inheriting from base classes in `src/adapters/bases/` is recommended.
+
+The base class provides an `executor: WebExecutor` property with a chainable API for convenient DOM manipulation.
+
+**Example** 🌰:
+
+```typescript
+const html = await this.executor
+	.waitQuery(selector1)      // Wait for element to appear
+	.queryAll(selector2, global=true)  // Query all elements globally
+	.at(-1)                     // Get the last element
+	.query(selector3)           // Query within the element
+	.html()                     // Get innerHTML
+	.done();                    // Complete script building and execute
 ```
 
-If you have multiple URLs, you can also do:
+> Each chained call doesn't execute immediately but builds a script that runs when `done()` is called.  
+> See `src/utils/webviewer/WebExecutor.ts` for details.
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+## Support the Project 💝
 
-## API Documentation
+If this project helps you, consider sponsoring:
 
-See https://github.com/obsidianmd/obsidian-api
+- Afdian: [http://afdian.com/a/lumosmoon](http://afdian.com/a/lumosmoon)
+
+- UniFans: [https://app.unifans.io/c/lumosmoon](https://app.unifans.io/c/lumosmoon)
+
+## Acknowledgments 🙏
+
+Thanks to [KIMI](https://kimi.ai/), [Tongyi Qianwen](https://tongyi.aliyun.com/), [Tencent Yuanbao](https://yuanbao.tencent.com/), [ChatGPT](https://chatgpt.com/) and other platforms for their excellent services. This plugin is built upon their web interfaces.

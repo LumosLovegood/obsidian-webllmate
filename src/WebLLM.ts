@@ -2,10 +2,9 @@ import {type WebLLMAdapter} from "./types";
 import {initAdapters, loadAdapters} from "./adapters"
 import {Notice, type View} from "obsidian";
 import PluginUtils from "./utils/pluginUtils";
-import prompts from "./prompts";
-// @ts-ignore
-import {WebView} from "./utils/WebViewer";
+import {WebView} from "./utils/webViewer";
 import type {StatusBarItem} from "./utils/ui";
+import type CursorToolBar from "./utils/ui/CursorToolBar";
 
 export const WEB_LLM_VIEW_ID = "web-llm-view";
 
@@ -16,11 +15,12 @@ export default class WebLLM {
 	private curAdapter: WebLLMAdapter;
 	private webView: WebView;
 	private answerStatus: StatusBarItem<statusKeys>;
+	private toolbar: CursorToolBar;
 
 	constructor() {
 		PluginUtils.ws.onLayoutReady(async () => {
 			await this.onLoad();
-		})
+		});
 	}
 
 	onUnLoad() {
@@ -51,9 +51,7 @@ export default class WebLLM {
 		this.registerCommands();
 		this.registerEditorMenuItems();
 		this.registerStatus();
-		PluginUtils.ui.setToolbarItems({
-			icon: "message-square-text", tooltip: "聊一下", callback: async () => await this.chat()
-		})
+		this.registerToolbar();
 	}
 
 	public switchAdapter(name = "Qwen", navigate = true) {
@@ -80,12 +78,20 @@ export default class WebLLM {
 			},
 			"complete": {
 				display: "✅回答完成！",
+				timeout: 5000
 			},
 			"error": {
 				display: "❌回答异常",
-				tooltip: "请打开控制台看详细原因"
+				tooltip: "请打开控制台看详细原因",
+				timeout: 5000
 			}
 		}, "idle");
+	}
+
+	private registerToolbar() {
+		this.toolbar = PluginUtils.ui.getToolbar("onselect", {
+			icon: "message-square-text", tooltip: "聊一下", callback: async () => await this.chat()
+		});
 	}
 
 	private registerCommands() {
@@ -94,20 +100,6 @@ export default class WebLLM {
 			name: "聊一下",
 			hotkeys: [{modifiers: ["Alt"], key: "C"}],
 			callback: () => this.chat(),
-		}, {
-			id: "new-web-chat",
-			name: "选择提示词开启新聊天",
-			hotkeys: [{modifiers: ["Alt"], key: "X"}],
-			callback: async () => {
-				const {prompt} = await PluginUtils.ui.showSuggester({
-					items: prompts.map((item) => ({
-						display: item.name,
-						item: item,
-						matchScope: item.name + item.prompt
-					}))
-				});
-				await this.curAdapter.newChat(prompt);
-			}
 		}, {
 			id: "get-recent-reply",
 			name: "复制最新回复为MD",
@@ -126,13 +118,7 @@ export default class WebLLM {
 				title: "聊一下",
 				icon: "message-square-quote",
 				callback: () => this.chat()
-			}, {
-				title: "开启新聊天",
-				icon: "message-square-quote",
-				subItems: prompts.map(({name, prompt}) => ({
-					title: name, callback: () => this.curAdapter.newChat(prompt),
-				}))
-			}, {
+			},{
 				title: "查询历史记录",
 				icon: "history",
 				callback: () =>

@@ -55,7 +55,7 @@ export class Suggester extends FuzzySuggestModal<SuggesterItem> {
 		return item.display;
 	}
 
-	onChooseItem(item: SuggesterItem, evt: MouseEvent | KeyboardEvent) {
+	onChooseItem(item: SuggesterItem) {
 		this.resolvePromise(item.item);
 	}
 

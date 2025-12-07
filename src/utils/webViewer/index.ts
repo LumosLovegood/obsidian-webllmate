@@ -99,6 +99,7 @@ export default class WebViewer {
 		if (!leaf) {
 			leaf = await this.createLeaf(viewType, position);
 		}
+		await this.app.workspace.revealLeaf(leaf);
 		if (![BUILTIN_WEBVIEW_TYPE, CUSTOM_WEBVIEW_TYPE].contains(leaf.view.getViewType())) {
 			await leaf.setViewState({
 				type: builtinMode ? BUILTIN_WEBVIEW_TYPE : CUSTOM_WEBVIEW_TYPE,

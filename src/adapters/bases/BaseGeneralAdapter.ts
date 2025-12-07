@@ -86,7 +86,7 @@ export default abstract class BaseGeneralAdapter extends BaseAdapter {
 			.input(this.config.chat.input.target, text, this.config.chat.input.type)
 			.delay(DELAY_SEND)
 			.click(this.config.chat.send)
-			.delay(1000)
+			.delay(1000);
 		return this;
 	}
 

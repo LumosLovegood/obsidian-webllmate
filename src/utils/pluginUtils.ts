@@ -81,6 +81,14 @@ export default class PluginUtils {
 		this.app.setting.openTabById("hotkeys").setQuery(this.id);
 	}
 
+	static async loadData() {
+		return this.plugin.loadData();
+	}
+
+	static async saveData(data: any): Promise<void> {
+		await this.plugin.saveData(data);
+	}
+
 	static saveLocalStorage(key: string, value: string): void {
 		return this.app.saveLocalStorage(key, value);
 	}
@@ -121,11 +129,10 @@ class Enhancer<T extends object> {
 				if (Reflect.has(target, p)) {
 					return Reflect.get(target, p, receiver);
 				}
-				/*
-				拦截on方法然后调用plugin.registerEvent()注册，以便插件卸载时可以自动清除事件
-				Intercept the on() method and automatically use plugin.registerEvent()
-				to register events, so that the plugin will automatically offRef events
-				when unload it;*/
+				// 拦截on方法然后调用plugin.registerEvent()注册，以便插件卸载时可以自动清除事件
+				// Intercept the on() method and automatically use plugin.registerEvent()
+				// to register events, so that the plugin will automatically offRef events
+				// when unload it
 				if (p === "on") {
 					const onFunc = Reflect.get(this.origin, p);
 					const origin = this.origin;

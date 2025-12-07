@@ -1,6 +1,6 @@
 import {Menu, type Plugin, setIcon, View} from "obsidian";
 import {Suggester, type SuggesterProps} from "./suggester";
-import CursorToolBar, {type CursorTool} from "./CursorToolBar";
+import CursorToolBar, {type CursorTool, type CursorToolBarMode} from "./CursorToolBar";
 
 interface MenuItem {
 	title: string;
@@ -109,7 +109,7 @@ export default class UIUtils {
 	private elements: HTMLElement[] = [];
 
 	constructor(private readonly plugin: Plugin) {
-		this.toolbar = new CursorToolBar(this.plugin);
+
 	}
 
 	onUnload() {
@@ -117,8 +117,11 @@ export default class UIUtils {
 		this.elements?.forEach((element) => element.remove());
 	}
 
-	setToolbarItems(...items: CursorTool[]) {
-		this.toolbar.setTools(items);
+	getToolbar(mode: CursorToolBarMode = "onselect", ...tools: CursorTool[]) {
+		this.toolbar ??= new CursorToolBar(this.plugin, mode);
+		this.toolbar.setMode(mode);
+		this.toolbar.setTools(tools);
+		return this.toolbar;
 	}
 
 	addMenuItem(

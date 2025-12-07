@@ -14,12 +14,11 @@ export default class CursorToolBar {
 	private readonly app: App;
 	private instance: ToolBar;
 	private visible = false;
-	private mode: CursorToolBarMode = "onselect";
 	private lastAltTime = 0;
 	private tools: CursorTool[] = [];
 	private status: StatusBarItem<CursorToolBarMode>;
 
-	constructor(private readonly plugin: Plugin) {
+	constructor(private readonly plugin: Plugin, private mode?: CursorToolBarMode) {
 		this.app = plugin.app;
 		this.instance = new ToolBar({target: document.body});
 		this.registerAutoUpdatePos();
@@ -28,7 +27,9 @@ export default class CursorToolBar {
 		this.registerSelectionEvent();
 		this.registerScrollEvent();
 		this.registerLeafChange();
-		this.registerStatus();
+		if (!mode) {
+			this.registerStatus();
+		}
 	}
 
 	setTools(tools: CursorTool[]) {
@@ -46,7 +47,7 @@ export default class CursorToolBar {
 		this.status.onUnLoad();
 	}
 
-	private setMode(mode: CursorToolBarMode) {
+	setMode(mode: CursorToolBarMode) {
 		this.mode = mode;
 	}
 
@@ -81,7 +82,7 @@ export default class CursorToolBar {
 					callback: () => this.setMode("onselect")
 				}
 			}
-		)
+			, "onselect")
 	}
 
 	private registerAutoUpdatePos() {
