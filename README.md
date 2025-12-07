@@ -8,7 +8,7 @@ Embed AI chat Web Homepages in [Obsidian](https://obsidian.md).
 
 Select text in your notes or PDFs, automatically send it to the LLM web panel in the sidebar to start a conversation, intelligently save responses to Wiki notes, and create bidirectional reference links in the original text.
 
-[images/overview.gif](https://www.kimi.com/chat/images/overview.gif)
+![](images/overview.gif)
 
 > **Why I built this**: While reading papers and notes, I frequently encountered unfamiliar terms. My previous tedious workflow was:
 >
@@ -35,23 +35,23 @@ Select text in your notes or PDFs, automatically send it to the LLM web panel in
 
 ### Quick Query ⚡
 
-[images/overview.gif](https://www.kimi.com/chat/images/overview.gif)
+![](images/overview.gif)
 
 ### WIKI References 🔗
 
-[images/wiki_reference.gif](https://www.kimi.com/chat/images/wiki_reference.gif)
+![](images/wiki_reference.gif)
 
 ### History Search 🔍
 
-[images/history.gif](https://www.kimi.com/chat/images/history.gif)
+![](images/history.gif)
 
 ### Traceable Links 🔄
 
-[images/answer_link.gif](https://www.kimi.com/chat/images/answer_link.gif)
+[](images/answer_link.gif)
 
 ### Multi-Platform Support 🌐
 
-[images/adapters.gif](https://www.kimi.com/chat/images/adapters.gif)
+[](images/adapters.gif)
 
 ### PDF++ Enhancement 📄✨
 
