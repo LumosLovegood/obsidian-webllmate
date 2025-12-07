@@ -5,14 +5,17 @@ import PluginUtils from "./utils/pluginUtils";
 import prompts from "./prompts";
 // @ts-ignore
 import {WebView} from "./utils/WebViewer";
+import type {StatusBarItem} from "./utils/ui";
 
 export const WEB_LLM_VIEW_ID = "web-llm-view";
+
+type statusKeys = "idle" | "busy" | "error" | "complete";
 
 export default class WebLLM {
 	adapters: WebLLMAdapter[];
 	private curAdapter: WebLLMAdapter;
 	private webView: WebView;
-	private statusBarItem: HTMLElement;
+	private answerStatus: StatusBarItem<statusKeys>;
 
 	constructor() {
 		PluginUtils.ws.onLayoutReady(async () => {
@@ -47,6 +50,10 @@ export default class WebLLM {
 		this.switchAdapter(adapter?.name, !adapter);
 		this.registerCommands();
 		this.registerEditorMenuItems();
+		this.registerStatus();
+		PluginUtils.ui.setToolbarItems({
+			icon: "message-square-text", tooltip: "聊一下", callback: async () => await this.chat()
+		})
 	}
 
 	public switchAdapter(name = "Qwen", navigate = true) {
@@ -60,6 +67,25 @@ export default class WebLLM {
 		}
 		this.curAdapter = adapter;
 		navigate && this.webView?.navigate(this.curAdapter.url);
+	}
+
+	private registerStatus() {
+		this.answerStatus = PluginUtils.ui.createStatusBarItem<statusKeys>({
+			"idle": {
+				display: "🍃",
+				tooltip: "欢迎提问！"
+			},
+			"busy": {
+				display: "🔍回答中...",
+			},
+			"complete": {
+				display: "✅回答完成！",
+			},
+			"error": {
+				display: "❌回答异常",
+				tooltip: "请打开控制台看详细原因"
+			}
+		}, "idle");
 	}
 
 	private registerCommands() {
@@ -90,15 +116,6 @@ export default class WebLLM {
 				const reply = await this.curAdapter.getCurrentReply();
 				await window.navigator.clipboard.writeText(reply);
 				new Notice("已复制最新回复");
-			}
-		}, {
-			id: "enable-toolbar",
-			name: "开启工具栏划词跟随",
-			callback: async () => {
-				PluginUtils.ui.setToolbarMode("selection");
-				PluginUtils.ui.setToolbarItems({
-					icon: "message-square-text", tooltip: "聊一下", callback: async () => await this.chat()
-				})
 			}
 		});
 	}
@@ -145,12 +162,13 @@ export default class WebLLM {
 			const result = await this.curAdapter.chat(selection);
 			const source = `[From: ${this.curAdapter.name}](${this.webView.url}#:~:text=${encodeURIComponent(selection)})`;
 			await PluginUtils.vault.append(file, result + "\n\n" + source);
+			this.answerStatus.setStatus("complete");
 		} catch (e) {
 			console.error(e);
 			notice = "回答异常！";
+			this.answerStatus.setStatus("error");
 		}
 		new Notice(notice);
-		PluginUtils.ui.setStatusBarItem(this.statusBarItem, {display: notice, timeout: 5000});
 	}
 
 	async preprocess(selection: string, view: View) {
@@ -158,7 +176,7 @@ export default class WebLLM {
 		const type = view.getViewType();
 		const notice = "回答中...";
 		new Notice(notice);
-		this.statusBarItem = PluginUtils.ui.addStatusBarItem({display: notice});
+		this.answerStatus.setStatus("busy");
 		let content = "";
 		if (type === "markdown") {
 			PluginUtils.ws.curEditor?.replaceSelection(`[[${fileName}|${selection}]]`);

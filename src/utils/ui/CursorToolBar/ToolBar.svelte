@@ -1,7 +1,7 @@
 <script lang="ts">
 	import {scale} from 'svelte/transition';
-	import {backOut, backIn, cubicOut} from 'svelte/easing';
-	import {onDestroy, tick} from 'svelte';
+	import {backOut, backIn} from 'svelte/easing';
+	import {tick} from 'svelte';
 	import Icon from "../components/Icon.svelte";
 	import type {CursorTool} from "./index";
 
@@ -13,11 +13,6 @@
 	let wrap: HTMLElement;
 	let width = 0;
 	let height = 0;
-
-	let prevLeft = 0;
-	let prevTop = 0;
-	let isMoving = false;
-	let animationFrame: number | null = null;
 
 	$: if (visible && wrap) {
 		tick().then(() => {
@@ -36,42 +31,6 @@
 		targetTop = Math.max(10, targetTop);
 	}
 
-	$: if (visible && (targetLeft !== prevLeft || targetTop !== prevTop)) {
-		if (animationFrame) {
-			cancelAnimationFrame(animationFrame);
-		}
-
-		isMoving = true;
-		const startTime = performance.now();
-		const duration = 0; // 动画持续时间
-		const startX = prevLeft || targetLeft;
-		const startY = prevTop || targetTop;
-
-		const animate = (currentTime: number) => {
-			const elapsed = currentTime - startTime;
-			const progress = Math.min(elapsed / duration, 1);
-			const easeProgress = cubicOut(progress);
-
-			prevLeft = startX + (targetLeft - startX) * easeProgress;
-			prevTop = startY + (targetTop - startY) * easeProgress;
-
-			if (progress < 1) {
-				animationFrame = requestAnimationFrame(animate);
-			} else {
-				prevLeft = targetLeft;
-				prevTop = targetTop;
-				isMoving = false;
-			}
-		};
-
-		animationFrame = requestAnimationFrame(animate);
-	}
-
-	onDestroy(() => {
-		if (animationFrame) {
-			cancelAnimationFrame(animationFrame);
-		}
-	});
 
 </script>
 
@@ -80,8 +39,8 @@
 		bind:this={wrap}
 		class="cursor-toolbar"
 		class:hover={true}
-		style:left="{prevLeft}px"
-		style:top="{prevTop}px"
+		style:left="{targetLeft}px"
+		style:top="{targetTop}px"
 		style:transform-origin="{originX}% {originY}%"
 		in:scale={{ duration: 250, easing: backOut, start: 0.7 }}
 		out:scale={{ duration: 200, easing: backIn, start: 0.7 }}

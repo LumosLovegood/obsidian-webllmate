@@ -7,7 +7,7 @@ import WebExecutor from "./WebExecutor";
 const BUILTIN_WEBVIEW_TYPE = "webviewer";
 const CUSTOM_WEBVIEW_TYPE = "custom-webview";
 
-interface WebViewerHooks {
+interface WebViewHooks {
 	onWebviewInit?: (webview: WebView) => void | Promise<void>;
 	onDomReady?: () => void | Promise<void>;
 	onTitleUpdated?: (title: string) => void | Promise<void>;
@@ -38,7 +38,7 @@ interface WebViewMenuItem {
 interface WebViewOptions extends WebViewUIOptions {
 	builtinMode?: boolean;
 	position?: Side | PaneType;
-	hooks?: WebViewerHooks;
+	hooks?: WebViewHooks;
 	cookies?: string;
 	url?: string;
 }
@@ -68,8 +68,24 @@ export default class WebViewer {
 		return !!this.app.setting.pluginTabs.find(tab => tab.id === BUILTIN_WEBVIEW_TYPE);
 	}
 
+	/**
+	 * 创建 WebView
+	 * @param leaf - WorkspaceLeaf | null | undefined. 用于创建WebView的leaf，如果为空则创建
+	 * @param webViewOptions - WebViewOptions | undefined. 创建WebView的选项参数，默认为{}
+	 *	  - builtinMode: boolean. 是否使用Obsidian内置的webviewer插件. 推荐开启;
+	 *	  - position: Side | PanelType. 若leaf非空，此项参数忽略;若leaf为空，此项表示新建leaf的位置;
+	 *	  - hooks: WebViewHooks. 钩子函数;
+	 *	  - url: string. WebView创建后的导航地址;
+	 *	  - cookies: string. WebView创建后需要注入的Cookies;
+	 *	  - headerButtons: Array<ViewHeaderButton>. 视图的标题区的按钮;
+	 *	  - panelMenuItems: Array<PanelMenuItem>. 视图panel的菜单项;
+	 *	  - webMenuItems: Array<WebViewMenuItem>. 网页右键菜单，当前仅builtinMode为true时支持;
+	 * @returns Promise<WebView>
+	 */
 	async createWebView(
-		leaf?: WorkspaceLeaf | null,
+		/*
+		* */
+		leaf?: WorkspaceLeaf | null | undefined,
 		{
 			builtinMode, position, hooks, url, cookies,
 			headerButtons, panelMenuItems, webMenuItems
@@ -202,7 +218,7 @@ export default class WebViewer {
 		};
 	}
 
-	private registerWebHooks(view: WebView, {onDomReady, onTitleUpdated}: WebViewerHooks) {
+	private registerWebHooks(view: WebView, {onDomReady, onTitleUpdated}: WebViewHooks) {
 		view.webview.addEventListener("dom-ready", () => onDomReady?.());
 		view.webview.addEventListener("page-title-updated", (evt: any) => onTitleUpdated?.(evt.title));
 	}
@@ -233,13 +249,19 @@ export class WebView extends ItemView {
 		this.webview.src = url;
 	}
 
+	// TODO
 	contextMenuItemsForSelection(text: string, isEditable: boolean) {
+		return [];
 	}
 
+	// TODO
 	contextMenuItemsForImg(url: string) {
+		return [];
 	}
 
+	// TODO
 	contextMenuItemsForLink(link: string, text: string) {
+		return [];
 	}
 
 	getViewType(): string {

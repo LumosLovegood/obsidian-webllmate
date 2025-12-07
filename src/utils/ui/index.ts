@@ -1,6 +1,6 @@
 import {Menu, type Plugin, setIcon, View} from "obsidian";
 import {Suggester, type SuggesterProps} from "./suggester";
-import CursorToolBar, {type CursorTool, type CursorToolBarMode} from "./CursorToolBar";
+import CursorToolBar, {type CursorTool} from "./CursorToolBar";
 
 interface MenuItem {
 	title: string;
@@ -15,87 +15,135 @@ interface IconButton {
 	callback: () => Promise<void> | void;
 }
 
-interface ViewHeaderButton extends IconButton{
+interface ViewHeaderButton extends IconButton {
 	id: string;
 }
 
 interface TextButton {
 	display: string;
 	tooltip?: string;
-	callback?: (evt: MouseEvent) => Promise<void> | void;
+	callback?: () => Promise<void> | void;
+	styles?: Partial<CSSStyleDeclaration>;
 }
 
-interface StatusItemOption extends TextButton{
+interface StatusItemOption extends TextButton {
 	timeout?: number;
+}
+
+
+function registerMenu(el: HTMLElement, items: MenuItem[], eventType: "contextmenu" | "click" = "contextmenu") {
+	const menu = new Menu();
+	addMenuItems(menu, items);
+	el.addEventListener(eventType, (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		menu.showAtMouseEvent(e);
+	});
+}
+
+function addMenuItem(
+	menu: Menu,
+	{title, icon, callback, subItems}: MenuItem
+) {
+	menu.addItem((item) => {
+		item.setTitle(title).setIcon(icon ?? "");
+		subItems && addMenuItems(item.setSubmenu(), subItems);
+		callback && item.onClick(callback);
+	});
+}
+
+function addMenuItems(menu: Menu, items: MenuItem[]) {
+	if (!items || !items.length) {
+		return;
+	}
+	menu.addSeparator();
+	items.forEach((item) => addMenuItem(menu, item));
+	menu.addSeparator();
+}
+
+export class StatusBarItem<T extends string> {
+	constructor(
+		readonly element: HTMLElement,
+		private readonly statusMap: Record<T, StatusItemOption>,
+		status?: T
+	) {
+		element.addClass("mod-clickable");
+		const values = Object.values(statusMap) as StatusItemOption[];
+		if (values.length === 0) {
+			throw new Error(`No status defined`);
+		}
+		const initOptions = status ? statusMap[status] : values[0];
+		initOptions.callback?.();
+		this.setStyles(initOptions);
+		if (values.filter(status => !!status.callback).length > 1) {
+			registerMenu(element, values.map(value => ({
+				title: value.display,
+				callback: () => {
+					value.callback?.();
+					this.setStyles(value);
+				},
+			})), "click");
+		}
+	}
+
+	onUnLoad() {
+		this.element.remove();
+	}
+
+	setStatus(status: T) {
+		this.statusMap[status] && this.setStyles(this.statusMap[status]);
+	}
+
+	private setStyles({display, tooltip, callback, timeout, styles}: StatusItemOption) {
+		this.element.show();
+		display && this.element.setText(display);
+		tooltip && this.element.setAttrs({"aria-label": tooltip, "data-tooltip-position": "top"});
+		callback && this.element.addEventListener("click", callback);
+		styles && this.element.setCssStyles(styles);
+		timeout && setTimeout(() => this.element.hide(), timeout);
+	}
 }
 
 export default class UIUtils {
 	private toolbar: CursorToolBar;
-	private headerButtons: HTMLElement[];
+	private elements: HTMLElement[] = [];
 
 	constructor(private readonly plugin: Plugin) {
-		this.toolbar = new CursorToolBar(plugin);
+		this.toolbar = new CursorToolBar(this.plugin);
 	}
 
 	onUnload() {
 		this.toolbar?.onUnload();
-		this.headerButtons?.forEach((button) => button.remove());
+		this.elements?.forEach((element) => element.remove());
 	}
 
 	setToolbarItems(...items: CursorTool[]) {
 		this.toolbar.setTools(items);
 	}
 
-	setToolbarMode(mode: CursorToolBarMode) {
-		this.toolbar.setMode(mode);
-	}
-
 	addMenuItem(
 		menu: Menu,
-		{title, icon, callback, subItems}: MenuItem
+		item: MenuItem
 	) {
-		menu.addItem((item) => {
-			item.setTitle(title).setIcon(icon ?? "");
-			subItems && this.addMenuItems(item.setSubmenu(), subItems);
-			callback && item.onClick(callback);
-		});
+		addMenuItem(menu, item)
 	}
 
 	addMenuItems(menu: Menu, items: MenuItem[]) {
-		if (!items || !items.length) {
-			return;
-		}
-		menu.addSeparator();
-		items.forEach((item) => this.addMenuItem(menu, item));
-		menu.addSeparator();
+		addMenuItems(menu, items);
 	}
 
 	addRibbon({icon, title, callback}: IconButton) {
 		return this.plugin.addRibbonIcon(icon, title, callback);
 	}
 
-	addStatusBarItem(option: StatusItemOption) {
-		const statusItem = this.plugin.addStatusBarItem();
-		statusItem.addClass("mod-clickable");
-		this.setStatusBarItem(statusItem, option);
-		return statusItem;
+	createStatusBarItem<T extends string>(statuses: Record<string, StatusItemOption>, status?: T) {
+		const element = this.plugin.addStatusBarItem();
+		this.elements.push(element);
+		return new StatusBarItem<T>(element, statuses, status);
 	}
 
-	setStatusBarItem(statusItem: HTMLElement, {display, tooltip, callback, timeout}: Partial<StatusItemOption>) {
-		display && statusItem.setText(display);
-		tooltip && statusItem.setAttrs({"aria-label": tooltip, "data-tooltip-position": "top"});
-		callback && statusItem.addEventListener("click", callback);
-		timeout && setTimeout(() => statusItem.hide(), timeout);
-	}
-
-	registerMenu(el: HTMLElement, items: MenuItem[]) {
-		const menu = new Menu();
-		this.addMenuItems(menu, items);
-		el.addEventListener("contextmenu", (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-			menu.showAtMouseEvent(e);
-		});
+	registerMenu(el: HTMLElement, items: MenuItem[], eventType: "contextmenu" | "click" = "contextmenu") {
+		registerMenu(el, items, eventType);
 	}
 
 	async showSuggester(props: SuggesterProps) {
@@ -119,7 +167,7 @@ export default class UIUtils {
 		buttonsAreaEl?.insertBefore(el, moreEl);
 		// 	@ts-ignore
 		view[button.id] = el;
-		this.headerButtons.push(el);
+		this.elements.push(el);
 		return el;
 	}
 }

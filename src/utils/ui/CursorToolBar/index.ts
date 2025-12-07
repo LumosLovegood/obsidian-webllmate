@@ -1,5 +1,6 @@
 import ToolBar from "./ToolBar.svelte";
-import {type App, debounce, type Editor, type Plugin} from "obsidian";
+import {type App, debounce, type Editor, Notice, type Plugin} from "obsidian";
+import {StatusBarItem} from "../index";
 
 export interface CursorTool {
 	icon: string;
@@ -7,15 +8,16 @@ export interface CursorTool {
 	callback: (selection?: string) => void | Promise<void>;
 }
 
-export type CursorToolBarMode = "shortcut" | "selection";
+export type CursorToolBarMode = "always" | "onselect" | "disabled";
 
 export default class CursorToolBar {
 	private readonly app: App;
 	private instance: ToolBar;
 	private visible = false;
-	private mode: CursorToolBarMode = "shortcut";
+	private mode: CursorToolBarMode = "onselect";
 	private lastAltTime = 0;
 	private tools: CursorTool[] = [];
+	private status: StatusBarItem<CursorToolBarMode>;
 
 	constructor(private readonly plugin: Plugin) {
 		this.app = plugin.app;
@@ -26,35 +28,60 @@ export default class CursorToolBar {
 		this.registerSelectionEvent();
 		this.registerScrollEvent();
 		this.registerLeafChange();
+		this.registerStatus();
 	}
 
 	setTools(tools: CursorTool[]) {
 		this.tools = tools;
 		this.instance?.$set({tools});
-		return this;
 	}
 
 	addTool(tool: CursorTool) {
 		this.tools.push(tool);
 		this.instance?.$set({tools: this.tools});
-		return this;
-	}
-
-	setMode(mode: CursorToolBarMode) {
-		this.mode = mode;
-		return this;
 	}
 
 	onUnload() {
 		this.instance?.$destroy();
+		this.status.onUnLoad();
+	}
+
+	private setMode(mode: CursorToolBarMode) {
+		this.mode = mode;
 	}
 
 	private toggle(visible: boolean) {
 		if (this.tools.length === 0) {
-			return;
+			this.setTools([{
+				icon: "earth",
+				tooltip: "No Tools Found",
+				callback: () => {
+					new Notice("No Tools Found")
+				}
+			}])
 		}
 		this.instance.$set({visible});
 		this.visible = visible;
+	}
+
+	private registerStatus() {
+		this.status = new StatusBarItem<CursorToolBarMode>(
+			this.plugin.addStatusBarItem(),
+			{
+				"disabled": {
+					display: "隐藏",
+					callback: () => this.setMode("disabled")
+				},
+				"always": {
+					display: "常驻模式",
+					callback: () => this.setMode("always")
+				},
+				"onselect": {
+					display: "划线模式",
+					callback: () => this.setMode("onselect")
+				}
+			}
+		)
 	}
 
 	private registerAutoUpdatePos() {
@@ -77,7 +104,7 @@ export default class CursorToolBar {
 
 	private registerSelectionEvent() {
 		const debouncer = debounce(() => {
-			if (this.mode !== "selection") {
+			if (this.mode !== "onselect") {
 				return;
 			}
 			this.updateToolBarPositionForSelection() && this.toggle(true);
@@ -87,7 +114,7 @@ export default class CursorToolBar {
 
 	private registerScrollEvent() {
 		const debouncer = debounce((container: HTMLElement) => {
-			if (this.mode !== "selection") {
+			if (this.mode !== "onselect") {
 				this.toggle(false);
 				return;
 			}
@@ -154,7 +181,7 @@ export default class CursorToolBar {
 
 	private registerShowShortcut() {
 		this.plugin.registerDomEvent(document, "keyup", (e) => {
-			if (this.mode !== "shortcut" || !this.app.workspace.activeEditor?.editor?.hasFocus()) {
+			if (this.mode !== "always" || !this.app.workspace.activeEditor?.editor?.hasFocus()) {
 				return;
 			}
 			const DOUBLE_ALT_TIMEOUT = 300;

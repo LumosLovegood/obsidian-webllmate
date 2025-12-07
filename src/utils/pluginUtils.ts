@@ -18,12 +18,12 @@ export default class PluginUtils {
 	static app: App;
 	static plugin: Plugin;
 	static webViewer: WebViewer;
+	static ui: UIUtils;
 	private static _cache: EnhancedCache;
 	private static _ws: EnhancedWorkspace;
 	private static _vault: EnhancedVault;
 	private static _commander: Commander;
 	private static _editor: EditorUtil;
-	private static _ui: UIUtils;
 	private static _html: HtmlUtil;
 	private static _checker: Checker;
 	private static _formatter: Formatter;
@@ -32,10 +32,11 @@ export default class PluginUtils {
 		this.plugin = plugin;
 		this.app = plugin.app;
 		this.webViewer = new WebViewer(this.plugin);
+		this.ui = new UIUtils(this.plugin);
 	}
 
 	static onUnload(): void {
-		this._ui?.onUnload();
+		this.ui?.onUnload();
 	}
 
 	static get cache(): EnhancedCache {
@@ -52,10 +53,6 @@ export default class PluginUtils {
 
 	static get commander(): Commander {
 		return this._commander ??= new Commander(this.plugin);
-	}
-
-	static get ui(): UIUtils {
-		return this._ui ??= new UIUtils(this.plugin);
 	}
 
 	static get editor(): EditorUtil {

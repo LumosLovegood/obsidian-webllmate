@@ -21,7 +21,7 @@ export default class WebLLMate extends Plugin {
 			"info",
 			`unloading plugin "${this.manifest.name}" v${this.manifest.version}`
 		);
-		this.webLLM.onUnLoad();
+		this.webLLM?.onUnLoad();
 		PluginUtils.onUnload();
 	}
 }
