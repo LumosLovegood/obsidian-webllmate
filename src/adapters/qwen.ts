@@ -1,7 +1,7 @@
 import BaseGeneralAdapter, {type WebLLMAdapterConfig } from "./bases/BaseGeneralAdapter";
 
 export default class Qwen extends BaseGeneralAdapter {
-	name = "qwen";
+	name = "Qwen";
 	url = "https://www.qianwen.com/";
 
     protected config: WebLLMAdapterConfig = {

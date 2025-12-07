@@ -6,6 +6,9 @@
 	"description": "Embed AI chat Web Homepages in Obsidian.",
 	"author": "Lumos",
 	"authorUrl": "https://github.com/LumosLovegood",
-	"fundingUrl": "http://afdian.com/a/lumosmoon",
+	"fundingUrl": {
+		"afdian": "http://afdian.com/a/lumosmoon",
+		"unifans": "https://app.unifans.io/c/lumosmoon"
+	},
 	"isDesktopOnly": true
 }

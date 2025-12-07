@@ -1,5 +1,5 @@
 import {type WebLLMAdapter} from "./types";
-import {loadAdapters} from "./adapters"
+import {initAdapters, loadAdapters} from "./adapters"
 import {Notice, type View} from "obsidian";
 import PluginUtils from "./utils/pluginUtils";
 import prompts from "./prompts";
@@ -25,14 +25,17 @@ export default class WebLLM {
 	}
 
 	private async onLoad(): Promise<void> {
-		const leaf = PluginUtils.ws.getLeafById(PluginUtils.loadLocalStorage(WEB_LLM_VIEW_ID));
+		const leaf = PluginUtils.ws.getLeafById(
+			PluginUtils.loadLocalStorage(WEB_LLM_VIEW_ID)
+		);
+		this.adapters = loadAdapters();
 		this.webView = await PluginUtils.webViewer.createWebView(leaf, {
 			builtinMode: true,
 			position: "right",
-			hooks: {onDomReady: () => this.curAdapter.onLoad()}
-		});
-		this.adapters = loadAdapters(this.webView.executor);
-		PluginUtils.webViewer.perform(this.webView, {
+			hooks: {
+				onWebviewInit: (webview) => initAdapters(this.adapters, webview.executor),
+				onDomReady: () => this.curAdapter.onLoad()
+			},
 			panelMenuItems: this.adapters.map(adapter => ({
 				title: adapter.name,
 				callback: () => this.switchAdapter(adapter.name),
@@ -46,7 +49,7 @@ export default class WebLLM {
 		this.registerEditorMenuItems();
 	}
 
-	public switchAdapter(name = "qwen", navigate = true) {
+	public switchAdapter(name = "Qwen", navigate = true) {
 		if (name === this.curAdapter?.name) {
 			return;
 		}
@@ -140,7 +143,8 @@ export default class WebLLM {
 		let notice = "回答完成！";
 		try {
 			const result = await this.curAdapter.chat(selection);
-			await PluginUtils.vault.append(file, result);
+			const source = `[From: ${this.curAdapter.name}](${this.webView.url}#:~:text=${encodeURIComponent(selection)})`;
+			await PluginUtils.vault.append(file, result + "\n\n" + source);
 		} catch (e) {
 			console.error(e);
 			notice = "回答异常！";

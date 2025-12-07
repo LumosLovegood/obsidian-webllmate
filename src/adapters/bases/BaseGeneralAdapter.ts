@@ -60,7 +60,8 @@ export default abstract class BaseGeneralAdapter extends BaseAdapter {
 
 	async getCurrentReply() {
 		const reply = await this.executor
-			.queryAll(this.config.reply.filter).at(-1)
+			.waitQuery(this.config.reply.filter)
+			.queryAll(this.config.reply.filter, true).at(-1)
 			.query(this.config.reply.content).html()
 			.done();
 		return htmlToMarkdown(reply);

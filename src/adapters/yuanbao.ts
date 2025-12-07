@@ -3,7 +3,7 @@ import BaseGeneralAdapter, {
 } from "./bases/BaseGeneralAdapter";
 
 export default class Yuanbao extends BaseGeneralAdapter {
-	name = "yuanbao";
+	name = "Yuanbao";
 	url = "https://yuanbao.tencent.com/chat";
 
 	protected config: WebLLMAdapterConfig = {

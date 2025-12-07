@@ -8,6 +8,7 @@ const BUILTIN_WEBVIEW_TYPE = "webviewer";
 const CUSTOM_WEBVIEW_TYPE = "custom-webview";
 
 interface WebViewerHooks {
+	onWebviewInit?: (webview: WebView) => void | Promise<void>;
 	onDomReady?: () => void | Promise<void>;
 	onTitleUpdated?: (title: string) => void | Promise<void>;
 }
@@ -34,10 +35,11 @@ interface WebViewMenuItem {
 	type: "selection" | "image" | "link";
 }
 
-interface WebViewOptions {
+interface WebViewOptions extends WebViewUIOptions {
 	builtinMode?: boolean;
 	position?: Side | PaneType;
 	hooks?: WebViewerHooks;
+	cookies?: string;
 	url?: string;
 }
 
@@ -54,16 +56,52 @@ interface ViewHeaderButton {
 }
 
 export default class WebViewer {
-	enableBuiltin: boolean;
 	private readonly app: App;
 
 	constructor(private readonly plugin: Plugin) {
 		this.app = plugin.app;
-		this.enableBuiltin = this.isBuiltinAvailable();
 		this.plugin.registerView(CUSTOM_WEBVIEW_TYPE, leaf => new WebView(leaf, CUSTOM_WEBVIEW_TYPE));
 	}
 
-	perform(
+	get isBuiltinModeAvailable(): boolean {
+		// @ts-ignore
+		return !!this.app.setting.pluginTabs.find(tab => tab.id === BUILTIN_WEBVIEW_TYPE);
+	}
+
+	async createWebView(
+		leaf?: WorkspaceLeaf | null,
+		{
+			builtinMode, position, hooks, url, cookies,
+			headerButtons, panelMenuItems, webMenuItems
+		}: WebViewOptions = {}
+	): Promise<WebView> {
+		// 如果未开启Obsidian内置的网页浏览器插件，降级到自定义WebView（Line: 212）实现
+		// if the builtin webviewer plugin is not supported or disabled, fallback to custom WebView at Line:212
+		const viewType = builtinMode && this.isBuiltinModeAvailable
+			? BUILTIN_WEBVIEW_TYPE
+			: CUSTOM_WEBVIEW_TYPE;
+		if (!leaf) {
+			leaf = await this.createLeaf(viewType, position);
+		}
+		if (![BUILTIN_WEBVIEW_TYPE, CUSTOM_WEBVIEW_TYPE].contains(leaf.view.getViewType())) {
+			await leaf.setViewState({
+				type: builtinMode ? BUILTIN_WEBVIEW_TYPE : CUSTOM_WEBVIEW_TYPE,
+				active: true,
+			});
+		}
+		const view = leaf.view as WebView;
+		view.executor = new WebExecutor(view.webview);
+		await hooks?.onWebviewInit?.(view);
+		hooks && this.registerWebHooks(view, hooks);
+		cookies && await this.setCookies(view, cookies);
+		// 如果url未定义，重新导航到原网址来触发注册的WebHook
+		// if url is undefined, navigate to view.url again to trigger registered WebHooks
+		view.navigate(url ?? view.url);
+		this.registerUI(view, {headerButtons, panelMenuItems, webMenuItems});
+		return view;
+	}
+
+	private registerUI(
 		view: WebView,
 		{headerButtons, panelMenuItems, webMenuItems}: WebViewUIOptions
 	) {
@@ -83,7 +121,7 @@ export default class WebViewer {
 			callback: () => window.open(view.url, "_external")
 		});
 		webMenuItems.push({
-			label: "复制指向突出显示的链接",
+			label: "复制指向划线处的链接",
 			click: async (text: string) => {
 				const encodedText = encodeURIComponent(text);
 				await window.navigator.clipboard.writeText(`${view.url}#:~:text=${encodedText}`);
@@ -91,33 +129,9 @@ export default class WebViewer {
 			type: "selection"
 		});
 		panelMenuItems.push(consoleItem);
-		headerButtons.push(consoleItem);
 		this.registerViewPaneMenu(view, panelMenuItems);
 		this.registerViewActions(view, headerButtons);
 		this.registerContextMenu(view, webMenuItems);
-	}
-
-	async createWebView(
-		leaf?: WorkspaceLeaf | null,
-		{builtinMode, position, hooks, url}: WebViewOptions = {}
-	): Promise<WebView> {
-		const viewType = builtinMode ? BUILTIN_WEBVIEW_TYPE : CUSTOM_WEBVIEW_TYPE;
-		if (!leaf) {
-			leaf = await this.createLeaf(viewType, position);
-		}
-		if (![BUILTIN_WEBVIEW_TYPE, CUSTOM_WEBVIEW_TYPE].contains(leaf.view.getViewType())) {
-			await leaf.setViewState({
-				type: builtinMode ? BUILTIN_WEBVIEW_TYPE : CUSTOM_WEBVIEW_TYPE,
-				active: true,
-			});
-		}
-		const view = leaf.view as WebView;
-		view.executor = new WebExecutor(view.webview);
-		hooks && this.registerWebHooks(view, hooks);
-		/*如果url未定义，重新导航到原网址来触发注册的WebHook
-		if not url, navigate to view.url again to trigger registered WebHooks*/
-		view.navigate(url ?? view.url);
-		return view;
 	}
 
 	private async createLeaf(viewType: "custom-webview" | "webviewer", position?: Side | PaneType,): Promise<WorkspaceLeaf> {
@@ -166,6 +180,10 @@ export default class WebViewer {
 		);
 	}
 
+	private async setCookies(view: WebView, cookie: string) {
+		await view.webview.executeJavaScript(`document.cookie = ${cookie}`);
+	}
+
 	private modifyContextMenuFunc(
 		view: WebView,
 		funcName: "contextMenuItemsForLink" | "contextMenuItemsForImg" | "contextMenuItemsForSelection",
@@ -184,18 +202,9 @@ export default class WebViewer {
 		};
 	}
 
-	private registerWebHooks(view: WebView, hooks: WebViewerHooks) {
-		view.webview.addEventListener("dom-ready", () => {
-			hooks?.onDomReady?.();
-		});
-		view.webview.addEventListener("page-title-updated", (evt: any) => {
-			hooks?.onTitleUpdated?.(evt.title);
-		});
-	}
-
-	private isBuiltinAvailable() {
-		// @ts-ignore
-		return !!this.app.setting.pluginTabs.find(tab => tab.id === BUILTIN_WEBVIEW_TYPE);
+	private registerWebHooks(view: WebView, {onDomReady, onTitleUpdated}: WebViewerHooks) {
+		view.webview.addEventListener("dom-ready", () => onDomReady?.());
+		view.webview.addEventListener("page-title-updated", (evt: any) => onTitleUpdated?.(evt.title));
 	}
 }
 

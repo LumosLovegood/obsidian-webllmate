@@ -1,7 +1,7 @@
 import BaseGeneralAdapter, {type WebLLMAdapterConfig } from "./bases/BaseGeneralAdapter";
 
 export default class Chatgpt extends BaseGeneralAdapter {
-	name = "chatgpt";
+	name = "ChatGPT";
 	url = "https://chatgpt.com/";
 	protected config: WebLLMAdapterConfig = {
 		chat: {

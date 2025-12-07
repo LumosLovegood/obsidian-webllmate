@@ -1,7 +1,7 @@
 import BaseGeneralAdapter, {type WebLLMAdapterConfig } from "./bases/BaseGeneralAdapter";
 
 export default class Kimi extends BaseGeneralAdapter {
-	name = "kimi";
+	name = "KIMI";
 	url = "https://www.kimi.com";
 	protected config: WebLLMAdapterConfig = {
 		chat: {

@@ -1,4 +1,4 @@
-# Obsidian Sample Plugin
+# Obsidian WebLLMate
 
 This is a sample plugin for Obsidian (https://obsidian.md).
 

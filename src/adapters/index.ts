@@ -6,9 +6,9 @@ import Yuanbao from "./yuanbao";
 import {type WebLLMAdapter} from "../types";
 
 
-export function loadAdapters(executor: WebExecutor): WebLLMAdapter[] {
+export function loadAdapters(): WebLLMAdapter[] {
 	const simpleAdapters = [Chatgpt, Kimi, Qwen, Yuanbao].map(
-		Adapter => new Adapter(executor)
+		Adapter => new Adapter()
 	) as WebLLMAdapter[];
 
 	const otherAdapters = [] as WebLLMAdapter[];
@@ -17,6 +17,6 @@ export function loadAdapters(executor: WebExecutor): WebLLMAdapter[] {
 }
 
 
-export function getAdapterNames() {
-	return [""]
+export function initAdapters(adapters: WebLLMAdapter[], executor: WebExecutor) {
+	adapters.forEach(adapter => adapter.init(executor));
 }
