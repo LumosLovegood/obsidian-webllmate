@@ -3,7 +3,7 @@
 	"name": "WebLLMate",
 	"version": "0.2.3",
 	"minAppVersion": "1.8.0",
-	"description": "Embed AI chat Web Homepages in Obsidian.",
+	"description": "Embed AI chat Web Homepages.",
 	"author": "Lumos",
 	"authorUrl": "https://github.com/LumosLovegood",
 	"fundingUrl": {
