@@ -57,7 +57,7 @@ Select text in your notes or PDFs, automatically send it to the LLM web panel in
 
 Works with [PDF++](https://github.com/RyotaUshio/obsidian-pdf-plus) to highlight selected text and create bidirectional PDF references 
 
-![images/pdf++.gif](https://www.kimi.com/chat/images/pdf++.gif)
+![](images/pdf++.gif)
 
 ### Additional Notes 💡
 
