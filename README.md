@@ -47,15 +47,17 @@ Select text in your notes or PDFs, automatically send it to the LLM web panel in
 
 ### Traceable Links 🔄
 
-[](images/answer_link.gif)
+![](images/answer_link.gif)
 
 ### Multi-Platform Support 🌐
 
-[](images/adapters.gif)
+![](images/adapters.gif)
 
 ### PDF++ Enhancement 📄✨
 
-Works with [PDF++](https://github.com/RyotaUshio/obsidian-pdf-plus) to highlight selected text and create bidirectional PDF references [images/pdf++.gif](https://www.kimi.com/chat/images/pdf++.gif)
+Works with [PDF++](https://github.com/RyotaUshio/obsidian-pdf-plus) to highlight selected text and create bidirectional PDF references 
+
+![images/pdf++.gif](https://www.kimi.com/chat/images/pdf++.gif)
 
 ### Additional Notes 💡
 
