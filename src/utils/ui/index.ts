@@ -4,7 +4,7 @@ import CursorToolBar, {type CursorTool, type CursorToolBarMode} from "./CursorTo
 
 interface MenuItem {
 	title: string;
-	callback?: () => void;
+	callback?: () => void | Promise<void>;
 	icon?: string;
 	subItems?: MenuItem[];
 }
@@ -47,8 +47,12 @@ function addMenuItem(
 ) {
 	menu.addItem((item) => {
 		item.setTitle(title).setIcon(icon ?? "");
-		subItems && addMenuItems(item.setSubmenu(), subItems);
-		callback && item.onClick(callback);
+		if (subItems) {
+			addMenuItems(item.setSubmenu(), subItems);
+		}
+		if (callback) {
+			item.onClick(callback);
+		}
 	});
 }
 
@@ -68,39 +72,56 @@ export class StatusBarItem<T extends string> {
 		status?: T
 	) {
 		element.addClass("mod-clickable");
-		const values = Object.values(statusMap) as StatusItemOption[];
+		const values: StatusItemOption[] = Object.values(statusMap);
 		if (values.length === 0) {
 			throw new Error(`No status defined`);
 		}
-		const initOptions = status ? statusMap[status] : values[0];
-		initOptions.callback?.();
-		this.setStyles(initOptions);
 		if (values.filter(status => !!status.callback).length > 1) {
 			registerMenu(element, values.map(value => ({
 				title: value.display,
-				callback: () => {
-					value.callback?.();
-					this.setStyles(value);
+				callback: async () => {
+					await value.callback?.();
+					this.perform(value);
 				},
 			})), "click");
 		}
+		this.setStatus(status);
 	}
 
 	onUnLoad() {
 		this.element.remove();
 	}
 
-	setStatus(status: T) {
-		this.statusMap[status] && this.setStyles(this.statusMap[status]);
+
+	setStatus(status?: T): void {
+		if (!status) {
+			return this.element.hide();
+		}
+		const options = this.statusMap[status];
+		if (!options) {
+			return;
+		}
+		options.callback?.();
+		this.perform(options);
 	}
 
-	private setStyles({display, tooltip, callback, timeout, styles}: StatusItemOption) {
+	private perform({display, tooltip, callback, timeout, styles}: StatusItemOption) {
 		this.element.show();
-		display && this.element.setText(display);
-		tooltip && this.element.setAttrs({"aria-label": tooltip, "data-tooltip-position": "top"});
-		callback && this.element.addEventListener("click", callback);
-		styles && this.element.setCssStyles(styles);
-		timeout && setTimeout(() => this.element.hide(), timeout);
+		if (display) {
+			this.element.setText(display);
+		}
+		if (tooltip) {
+			this.element.setAttrs({"aria-label": tooltip, "data-tooltip-position": "top"});
+		}
+		if (callback) {
+			this.element.addEventListener("click", callback);
+		}
+		if (styles) {
+			this.element.setCssStyles(styles);
+		}
+		if (timeout) {
+			setTimeout(() => this.element.hide(), timeout);
+		}
 	}
 }
 
@@ -154,10 +175,12 @@ export default class UIUtils {
 		return suggester.promise;
 	}
 
-	setIconButton(el: HTMLElement, button: IconButton) {
-		setIcon(el, button.icon);
-		button.title && el.setAttribute("aria-label", button.title);
-		el.addEventListener("click", button.callback);
+	setIconButton(el: HTMLElement, {icon, title, callback}: IconButton) {
+		setIcon(el, icon);
+		if (title) {
+			el.setAttribute("aria-label", title);
+		}
+		el.addEventListener("click", callback);
 	}
 
 	createHeaderButton(view: View, button: ViewHeaderButton) {

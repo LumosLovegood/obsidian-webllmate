@@ -1,6 +1,6 @@
 import {type WebLLMAdapter} from "./types";
 import {initAdapters, loadAdapters} from "./adapters"
-import {Notice, type View} from "obsidian";
+import {FileView, Notice, View} from "obsidian";
 import PluginUtils from "./utils/pluginUtils";
 import {WebView} from "./utils/webViewer";
 import type {StatusBarItem} from "./utils/ui";
@@ -8,7 +8,7 @@ import type CursorToolBar from "./utils/ui/CursorToolBar";
 
 export const WEB_LLM_VIEW_ID = "web-llm-view";
 
-type statusKeys = "idle" | "busy" | "error" | "complete";
+type statusKeys = "busy" | "error" | "complete";
 
 export default class WebLLM {
 	adapters: WebLLMAdapter[];
@@ -64,15 +64,13 @@ export default class WebLLM {
 			return;
 		}
 		this.curAdapter = adapter;
-		navigate && this.webView?.navigate(this.curAdapter.url);
+		if (navigate) {
+			this.webView?.navigate(this.curAdapter.url);
+		}
 	}
 
 	private registerStatus() {
 		this.answerStatus = PluginUtils.ui.createStatusBarItem<statusKeys>({
-			"idle": {
-				display: "🍃",
-				tooltip: "欢迎提问！"
-			},
 			"busy": {
 				display: "🔍回答中...",
 			},
@@ -85,7 +83,7 @@ export default class WebLLM {
 				tooltip: "请打开控制台看详细原因",
 				timeout: 5000
 			}
-		}, "idle");
+		});
 	}
 
 	private registerToolbar() {
@@ -99,7 +97,7 @@ export default class WebLLM {
 			id: "web-chat",
 			name: "聊一下",
 			hotkeys: [{modifiers: ["Alt"], key: "C"}],
-			callback: () => this.chat(),
+			callback: async () => this.chat(),
 		}, {
 			id: "get-recent-reply",
 			name: "复制最新回复为MD",
@@ -118,7 +116,7 @@ export default class WebLLM {
 				title: "聊一下",
 				icon: "message-square-quote",
 				callback: () => this.chat()
-			},{
+			}, {
 				title: "查询历史记录",
 				icon: "history",
 				callback: () =>
@@ -132,7 +130,7 @@ export default class WebLLM {
 			new Notice("当前适配器不可用");
 			return;
 		}
-		const view = PluginUtils.ws.activeLeaf?.view;
+		const view = PluginUtils.ws.getActiveViewOfType<FileView>(FileView);
 		if (!view) {
 			new Notice("不支持的视图");
 			return;

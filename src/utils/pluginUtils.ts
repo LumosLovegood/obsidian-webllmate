@@ -4,7 +4,7 @@ import {
 	normalizePath, stringifyYaml,
 	Vault, Workspace, WorkspaceLeaf,
 	type PluginManifest, type RequestUrlParam,
-	type SplitDirection, type FrontMatterCache, type Command,
+	type SplitDirection, type FrontMatterCache, type Command, FileView,
 } from "obsidian";
 import {fromBuffer} from "file-type";
 import UIUtils from "./ui";
@@ -247,8 +247,8 @@ class VaultEnhancer extends Enhancer<Vault> {
 	}
 
 	getPdfLink(): string {
-		const view = PluginUtils.ws.activeLeaf?.view;
-		if (!view || view.getViewType() !== "pdf") {
+		const view = PluginUtils.ws.getActiveViewOfType<FileView>(FileView);
+		if (!view || !view.file || view.getViewType() !== "pdf") {
 			throw new Error(`Not PDFView`);
 		}
 		const selection = getSelection();
@@ -291,9 +291,10 @@ class WorkspaceEnhancer extends Enhancer<Workspace> {
 
 	toggleLeftRibbon(show?: boolean): void {
 		show = show ?? !this.origin.leftRibbon.hidden;
-		show
-			? this.origin.leftRibbon.hide()
-			: this.origin.leftRibbon.show();
+		if (show) {
+			return this.origin.leftRibbon.hide();
+		}
+		this.origin.leftRibbon.show();
 	}
 }
 
@@ -396,7 +397,7 @@ class Checker {
 			const hostname1 = new URL(url1).hostname;
 			const hostname2 = new URL(url2).hostname;
 			return hostname1 === hostname2;
-		} catch (e) {
+		} catch {
 			return false;
 		}
 	}

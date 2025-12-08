@@ -275,9 +275,11 @@ class ElementRef {
 
 	setStyles(styles: Partial<CSSStyleDeclaration>): WebExecutor {
 		for (const [key, value] of Object.entries(styles)) {
-			this.executor.statements.push(
-				`${this.expr}?.style.setProperty("${key}", "${value}");`
-			);
+			if (typeof value === 'string') {
+				this.executor.statements.push(
+					`${this.expr}?.style.setProperty("${key}", "${value}");`
+				);
+			}
 		}
 		this.executor.lastResultVar = null;
 		return this.executor;

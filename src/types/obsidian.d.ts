@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as obsidian from 'obsidian';
 import {Command, EditorPosition, MarkdownPreviewRenderer, Menu, TFile} from "obsidian";
 
@@ -9,7 +8,7 @@ declare module "obsidian" {
 
 	interface App {
 		plugins: {
-			getPlugin(name: string): any;
+			getPlugin(name: string): Plugin;
 			enabledPlugins: Set<string>;
 			getPluginFolder(): string;
 		};
@@ -20,7 +19,7 @@ declare module "obsidian" {
 		};
 		getTheme: () => string;
 		saveLocalStorage: (key: string, value: unknown) => void;
-		loadLocalStorage: (key: string) => any;
+		loadLocalStorage: (key: string) => Record<string, string>;
 		setting: {
 			open: () => void,
 			openTabById: (id: string) => any,
@@ -41,10 +40,6 @@ declare module "obsidian" {
 	export interface WorkspaceLeaf {
 		id: string,
 		group: string | undefined,
-		history: {
-			backHistory: Array<any>,
-			forwardHistory: Array<any>
-		},
 		children: WorkspaceLeaf[],
 		tabHeaderEl: HTMLElement,
 		tabHeaderInnerIconEl: HTMLDivElement,
@@ -53,7 +48,6 @@ declare module "obsidian" {
 		containerEl: HTMLDivElement,
 		activeTime: number;
 		rebuildView: () => void;
-		setDimension: (dimension: any) => void;
 		// @ts-ignore
 		parent: WorkspaceLeaf;
 	}
@@ -89,8 +83,6 @@ declare module "obsidian" {
 		exists(path: string): Promise<boolean>;
 
 		getConfig<T extends keyof VaultSettings>(setting: T): VaultSettings[T];
-
-		setConfig<T extends keyof VaultSettings>(setting: T, value: any): void;
 
 		getFileByPath(path: string): TFile | null;
 	}

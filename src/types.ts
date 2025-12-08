@@ -5,7 +5,7 @@ export interface LLM{
 export interface WebLLMAdapter extends LLM {
 	name: string;
 	url: string;
-	init(options: any): void;
+	init(option: any): void;
 	onLoad(): Promise<void>;
 	newChat(text: string): Promise<string>;
 	getCurrentReply(): Promise<string>;

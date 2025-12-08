@@ -52,7 +52,10 @@ export default abstract class BaseGeneralAdapter extends BaseAdapter {
 	async queryHistory(query?: string): Promise<void> {
 		const DELAY_INPUT = 500;
 		this.showHistory();
-		!!query && !!this.config.history.input && this.executor
+		if (!query || !this.config.history.input) {
+			return;
+		}
+		this.executor
 			.delay(DELAY_INPUT)
 			.input(this.config.history.input.target, query, this.config.history.input.type);
 		return this.executor.done();

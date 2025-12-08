@@ -44,7 +44,7 @@ export default class CursorToolBar {
 
 	onUnload() {
 		this.instance?.$destroy();
-		this.status.onUnLoad();
+		this.status?.onUnLoad();
 	}
 
 	setMode(mode: CursorToolBarMode) {
@@ -57,7 +57,7 @@ export default class CursorToolBar {
 				icon: "earth",
 				tooltip: "No Tools Found",
 				callback: () => {
-					new Notice("No Tools Found")
+					new Notice("No Tools Found");
 				}
 			}])
 		}
@@ -108,7 +108,9 @@ export default class CursorToolBar {
 			if (this.mode !== "onselect") {
 				return;
 			}
-			this.updateToolBarPositionForSelection() && this.toggle(true);
+			if (this.updateToolBarPositionForSelection()) {
+				this.toggle(true);
+			}
 		}, 500, true);
 		this.plugin.registerDomEvent(document, 'selectionchange', () => debouncer());
 	}

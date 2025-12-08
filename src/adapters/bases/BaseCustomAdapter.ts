@@ -42,7 +42,7 @@ export default abstract class BaseCustomAdapter extends BaseAdapter {
 
 	private async waitChatResult() {
 		const CHECK_FINISH_INTERVAL = 200;
-		return new Promise<string>((resolve, reject) => {
+		return new Promise<string>((resolve) => {
 			const timer = window.setInterval(async () => {
 				if (!await this.finished) {
 					return;

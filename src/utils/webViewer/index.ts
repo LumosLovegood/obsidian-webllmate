@@ -31,7 +31,7 @@ interface PanelMenuItem {
 
 interface WebViewMenuItem {
 	label: string;
-	click: (data: string, param?: string | boolean) => void;
+	click: (data: string, param?: string | boolean) => void | Promise<void>;
 	type: "selection" | "image" | "link";
 }
 
@@ -85,7 +85,7 @@ export default class WebViewer {
 	async createWebView(
 		/*
 		* */
-		leaf?: WorkspaceLeaf | null | undefined,
+		leaf?: WorkspaceLeaf | null,
 		{
 			builtinMode, position, hooks, url, cookies,
 			headerButtons, panelMenuItems, webMenuItems
@@ -109,8 +109,12 @@ export default class WebViewer {
 		const view = leaf.view as WebView;
 		view.executor = new WebExecutor(view.webview);
 		await hooks?.onWebviewInit?.(view);
-		hooks && this.registerWebHooks(view, hooks);
-		cookies && await this.setCookies(view, cookies);
+		if (hooks) {
+			this.registerWebHooks(view, hooks);
+		}
+		if (cookies) {
+			await this.setCookies(view, cookies);
+		}
 		// 如果url未定义，重新导航到原网址来触发注册的WebHook
 		// if url is undefined, navigate to view.url again to trigger registered WebHooks
 		view.navigate(url ?? view.url);
@@ -129,14 +133,18 @@ export default class WebViewer {
 			icon: "bug-play",
 			title: "网页调试",
 			callback: () => {
-				!view.webview.isDevToolsOpened() && view.webview.openDevTools();
+				if (!view.webview.isDevToolsOpened()) {
+					view.webview.openDevTools();
+				}
 			}
 		}
-		view.getViewType() === CUSTOM_WEBVIEW_TYPE && panelMenuItems?.push({
-			icon: "external-link",
-			title: "在外部打开",
-			callback: () => window.open(view.url, "_external")
-		});
+		if (view.getViewType() === CUSTOM_WEBVIEW_TYPE) {
+			panelMenuItems?.push({
+				icon: "external-link",
+				title: "在外部打开",
+				callback: () => window.open(view.url, "_external")
+			});
+		}
 		webMenuItems.push({
 			label: "复制指向划线处的链接",
 			click: async (text: string) => {
@@ -163,7 +171,7 @@ export default class WebViewer {
 	}
 
 	private registerViewPaneMenu(view: WebView, menuItems: PanelMenuItem[]) {
-		const original = view.onPaneMenu;
+		const original = view.onPaneMenu.bind(view);
 		view.onPaneMenu = function (...args) {
 			original.apply(this, args);
 			const [menu] = args;
@@ -171,7 +179,9 @@ export default class WebViewer {
 			menuItems.forEach(({title, icon, callback}) => {
 				menu.addItem((item) => {
 					item.setTitle(title).setIcon(icon ?? "");
-					callback && item.onClick(callback);
+					if (callback) {
+						item.onClick(callback);
+					}
 				});
 			});
 			menu.addSeparator();
@@ -243,7 +253,9 @@ export class WebView extends ItemView {
 
 	async onOpen(): Promise<void> {
 		this.webview = this.createWebViewEl();
-		this.url && this.navigate(this.url);
+		if (this.url) {
+			this.navigate(this.url);
+		}
 	}
 
 	navigate(url: string) {
@@ -289,7 +301,7 @@ export class WebView extends ItemView {
 		this.app.workspace.requestSaveLayout();
 	}
 
-	protected async on(eventType: string, listener: (...args: any[]) => void) {
+	protected on(eventType: string, listener: (...args: any[]) => void) {
 		this.webview.addEventListener(eventType, listener);
 	}
 
@@ -301,8 +313,8 @@ export class WebView extends ItemView {
 		webviewEl.setAttribute("partition", `persist:vault-${this.app.appId}`);
 		webviewEl.setCssStyles({backgroundColor: "white"});
 		this.contentEl.appendChild(webviewEl);
-		webviewEl.addEventListener("page-title-updated", async () => this.updateInfo());
-		webviewEl.addEventListener("did-navigate-in-page", async () => this.updateInfo());
+		webviewEl.addEventListener("page-title-updated", () => this.updateInfo());
+		webviewEl.addEventListener("did-navigate-in-page", () => this.updateInfo());
 		// Refer: https://github.com/PKM-er/Obsidian-Surfing/blob/main/src/surfingViewNext.ts#L63
 		webviewEl.addEventListener("page-favicon-updated", (event: any) => {
 			if (event.favicons[0] !== undefined) {
