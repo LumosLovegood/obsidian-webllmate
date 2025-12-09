@@ -2,7 +2,7 @@ import {type WebLLMAdapter} from "./types";
 import {initAdapters, loadAdapters} from "./adapters"
 import {FileView, Notice, View} from "obsidian";
 import PluginUtils from "./utils/pluginUtils";
-import {WebView} from "./utils/webViewer";
+import {WebView} from "./utils/webViewer/WebView";
 import type {StatusBarItem} from "./utils/ui";
 import type CursorToolBar from "./utils/ui/CursorToolBar";
 
@@ -25,6 +25,7 @@ export default class WebLLM {
 
 	onUnLoad() {
 		this.webView.leaf?.detach();
+		this.toolbar?.onUnload();
 	}
 
 	private async onLoad(): Promise<void> {

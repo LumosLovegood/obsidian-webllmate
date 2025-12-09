@@ -91,7 +91,7 @@ The base class provides an `executor: WebExecutor` property with a chainable API
 
 ```typescript
 const html = await this.executor
-	.waitQuery(selector1)      // Wait for element to appear
+	.waitFor(selector1)      // Wait for element to appear
 	.queryAll(selector2, global=true)  // Query all elements globally
 	.at(-1)                     // Get the last element
 	.query(selector3)           // Query within the element

@@ -1,5 +1,4 @@
-import type {WebViewElement} from './index';
-
+import type {WebViewElement} from './WebView';
 
 export type InputType = "lexical" | "textarea" | "contenteditable" | "normal" | "controlled";
 
@@ -29,14 +28,55 @@ function unifySelector(
 
 type ElementExpr = string;
 
+interface WebExecutorUtil {
+	name: string;
+	definition: string;
+	isAsync: boolean;
+}
+
 export default class WebExecutor {
 	statements: string[] = [];
 	lastResultVar: string | null = null;
 	private namedResults: Record<string, string> = {};
 	private nextId = 0;
 	needsAsync = false;
+	utils: WebExecutorUtil[] = [{
+		name: "sleep",
+		definition: "const sleep = ms => new Promise(r => setTimeout(r, ms));",
+		isAsync: true,
+	}, {
+		name: "waitUntilElement",
+		definition: `async (sel, timeout, interval=200) => {
+          const start = Date.now();
+          while (Date.now() - start < timeout) {
+            const el = document.querySelector(sel);
+            if (el) return el;
+            await sleep(interval);
+          }
+          return null;
+        };`,
+		isAsync: true,
+	}];
 
 	constructor(private readonly webview: WebViewElement) {
+	}
+
+	registerUtil(util: WebExecutorUtil) {
+		this.utils.push(util);
+	}
+
+	applyUtil(name: string, key?: string) {
+		const util = this.utils.find(u => u.name === name);
+		if (!util) {
+			throw new Error(`Util Not Registered: ${name}`);
+		}
+		if (!util.isAsync) {
+			this._setLastResult(`${name}();`, key);
+		} else {
+			this._setLastResult(`await ${name}();`, key);
+			this.needsAsync = true;
+		}
+		return this;
 	}
 
 	@unifySelector
@@ -56,7 +96,7 @@ export default class WebExecutor {
 	}
 
 	@unifySelector
-	waitQuery(selector: string, timeoutMs = 30_000, interval = 200): ElementRef {
+	waitFor(selector: string, timeoutMs = 30_000, interval = 200): ElementRef {
 		this.needsAsync = true;
 		const varName = `_e${this.nextId++}`;
 		this.statements.push(`
@@ -97,25 +137,12 @@ export default class WebExecutor {
 		return this;
 	}
 
-
 	async done<T = any>(options?: { all?: boolean }): Promise<T> {
-		let script = this.statements.join("\n");
-
-		if (this.needsAsync) {
-			const utils = `
-        const sleep = ms => new Promise(r => setTimeout(r, ms));
-        const waitUntilElement = async (sel, timeout, interval=200) => {
-          const start = Date.now();
-          while (Date.now() - start < timeout) {
-            const el = document.querySelector(sel);
-            if (el) return el;
-            await sleep(interval);
-          }
-          return null;
-        };
-      `;
-			script = `${utils}\n${script}`;
-		}
+		const utils = this.utils
+			.filter(u => this.needsAsync || !u.isAsync)
+			.map(u => u.definition)
+			.join("\n");
+		let script = `${utils}\n${this.statements.join("\n")}`;
 
 		if (options?.all) {
 			if (Object.keys(this.namedResults).length > 0) {
@@ -225,7 +252,7 @@ class ElementRef {
 	}
 
 	@unifySelector
-	waitQuery(subSelector: string, timeoutMs = 30_000, interval = 200): ElementRef {
+	waitFor(subSelector: string, timeoutMs = 30_000, interval = 200): ElementRef {
 		const safeSel = escapeSelectorForJSString(subSelector);
 		const varName = `_e${this.executor['nextId']++}`;
 		this.executor.needsAsync = true;
@@ -246,16 +273,25 @@ class ElementRef {
 		return new ElementRef(this.executor, varName);
 	}
 
+	perform(action: string): WebExecutor {
+		return this.executor._perform(this.expr, `${action}`);
+	}
+
 	focus(): WebExecutor {
-		return this.executor._perform(this.expr, "focus()")
+		return this.perform("focus()");
 	}
 
 	click(): WebExecutor {
-		return this.executor._perform(this.expr, "click()");
+		return this.perform("click()");
 	}
 
 	remove(): WebExecutor {
-		return this.executor._perform(this.expr, "remove()");
+		return this.perform("remove()");
+	}
+
+	getAttr(attr: string, key?: string): any {
+		this.executor._setLastResult(`${this.expr}?.${attr}`, key);
+		return this.executor;
 	}
 
 	exists(key?: string): WebExecutor {
@@ -264,13 +300,11 @@ class ElementRef {
 	}
 
 	text(key?: string): WebExecutor {
-		this.executor._setLastResult(`${this.expr}?.textContent`, key);
-		return this.executor;
+		return this.getAttr("textContent", key);
 	}
 
 	html(key?: string): WebExecutor {
-		this.executor._setLastResult(`${this.expr}?.innerHTML`, key);
-		return this.executor;
+		return this.getAttr("innerHTML", key);
 	}
 
 	setStyles(styles: Partial<CSSStyleDeclaration>): WebExecutor {
@@ -377,13 +411,33 @@ class ElementListRef {
 		return this.executor;
 	}
 
-	mapText(key?: string): WebExecutor {
-		this.executor._setLastResult(`${this.listExpr}.map(el => el?.textContent)`, key);
-		return this.executor;
+	find(type: "text", target: string): ElementRef;
+	find(type: "attr", attrName: string, target: string | number | boolean): ElementRef;
+	find(type: "text" | "attr", targetOrAttr: string, target?: string | number | boolean): ElementRef {
+		const targetVar = `_e${this.executor['nextId']++}`;
+		if (type === "text") {
+			this.executor.statements.push(
+				`const ${targetVar} = ${this.listExpr}.find(el => el?.textContent === "${targetOrAttr}");`
+			);
+			return new ElementRef(this.executor, targetVar);
+		}
+		const safeAttr = escapeSelectorForJSString(targetOrAttr);
+		target = typeof target === "string" ? `"${target}"` : target;
+		this.executor.statements.push(
+			`const ${targetVar} = ${this.listExpr}.find(el => el?.getAttribute("${safeAttr}") === ${target});`
+		);
+		return new ElementRef(this.executor, targetVar);
 	}
 
-	mapAttr(attrName: string, key?: string): WebExecutor {
-		const safeAttr = escapeSelectorForJSString(attrName); // 防止 attrName 含引号
+
+	map(type: "text", key?: string): WebExecutor;
+	map(type: "attr", attrName: string, key?: string): WebExecutor;
+	map(type: "text" | "attr", attrNameOrKey?: string, key?: string): WebExecutor {
+		if (type === "text") {
+			this.executor._setLastResult(`${this.listExpr}.map(el => el?.textContent)`, attrNameOrKey);
+			return this.executor;
+		}
+		const safeAttr = escapeSelectorForJSString(attrNameOrKey as string);
 		this.executor._setLastResult(
 			`${this.listExpr}.map(el => el?.getAttribute("${safeAttr}"))`,
 			key

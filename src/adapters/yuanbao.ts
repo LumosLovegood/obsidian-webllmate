@@ -35,6 +35,8 @@ export default class Yuanbao extends BaseGeneralAdapter {
 			.remove("div[class^='index_downloadPC']")
 			.remove("div.agent-dialogue__tool")
 			.remove(".input-guide-v2")
+			.remove(".agent-dialogue__content-input-guide")
+			.remove(".input-guide-v2--visible")
 			.done<void>();
 	}
 }

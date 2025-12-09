@@ -76,7 +76,7 @@
 
 ```typescript
 const html = await this.executor
-	.waitQuery(selector1) // 等待元素出现
+	.waitFor(selector1) // 等待元素出现
 	.queryAll(selector2, global = true) // 全局查询元素列表
 	.at(-1) // 取最后一个元素
 	.query(selector3) // 元素内查询

@@ -63,7 +63,7 @@ export default abstract class BaseGeneralAdapter extends BaseAdapter {
 
 	async getCurrentReply() {
 		const reply = await this.executor
-			.waitQuery(this.config.reply.filter)
+			.waitFor(this.config.reply.filter)
 			.queryAll(this.config.reply.filter, true).at(-1)
 			.query(this.config.reply.content).html()
 			.done();
@@ -98,7 +98,7 @@ export default abstract class BaseGeneralAdapter extends BaseAdapter {
 		const WAIT_CHECK_INTERVAL = 500;
 		this.executor
 			.queryAll(this.config.reply.filter).at(-1)
-			.waitQuery(this.config.reply.finishFlag, WAIT_CHECK_TIMEOUT, WAIT_CHECK_INTERVAL)
+			.waitFor(this.config.reply.finishFlag, WAIT_CHECK_TIMEOUT, WAIT_CHECK_INTERVAL)
 		return this;
 	}
 }
