@@ -32,11 +32,13 @@ export default class Yuanbao extends BaseGeneralAdapter {
 	async onLoad(): Promise<void> {
 		await this.executor
 			.delay(600)
-			.remove("div[class^='index_downloadPC']")
-			.remove("div.agent-dialogue__tool")
-			.remove(".input-guide-v2")
-			.remove(".agent-dialogue__content-input-guide")
-			.remove(".input-guide-v2--visible")
+			.remove(
+				"div[class^='index_downloadPC']",
+				"div.agent-dialogue__tool",
+				".input-guide-v2",
+				".agent-dialogue__content-input-guide",
+				".input-guide-v2--visible"
+			)
 			.done<void>();
 	}
 }

@@ -153,10 +153,8 @@ export default class WebExecutor {
 			} else {
 				script += `\nreturn {};`;
 			}
-		} else {
-			if (this.lastResultVar) {
-				script += `\nreturn ${this.lastResultVar};`;
-			}
+		} else if (this.lastResultVar) {
+			script += `\nreturn ${this.lastResultVar};`;
 		}
 
 		const wrapper = this.needsAsync
@@ -208,8 +206,9 @@ export default class WebExecutor {
 	}
 
 	@unifySelector
-	remove(selector: string): WebExecutor {
-		return this.query(selector).remove();
+	remove(...selectors: string[]): WebExecutor {
+		selectors.forEach((selector: string) => this.query(selector).remove());
+		return this;
 	}
 
 	@unifySelector
@@ -217,18 +216,14 @@ export default class WebExecutor {
 		return this.query(selector).setStyles(styles);
 	}
 
-	hide(selector: string): WebExecutor {
-		return this.setStyles(selector, {display: "none"});
+	hide(...selectors: string[]): WebExecutor {
+		selectors.forEach(selector => this.setStyles(selector, {display: "none"}));
+		return this;
 	}
 
-	show(selector: string): WebExecutor {
-		return this.setStyles(selector, {display: ""});
-	}
-
-	@unifySelector
-	focus(selector: string): WebExecutor {
-		this.webview.focus();
-		return this.query(selector).focus();
+	show(...selectors: string[]): WebExecutor {
+		selectors.forEach(selector => this.setStyles(selector, {display: ""}));
+		return this;
 	}
 
 	async sleep(ms: number): Promise<void> {
@@ -322,9 +317,7 @@ class ElementRef {
 	setStyles(styles: Partial<CSSStyleDeclaration>): WebExecutor {
 		for (const [key, value] of Object.entries(styles)) {
 			if (typeof value === 'string') {
-				this.executor.statements.push(
-					`${this.expr}?.style.setProperty("${key}", "${value}");`
-				);
+				this.executor.statements.push(`${this.expr}?.style.setProperty("${key}", "${value}");`);
 			}
 		}
 		this.executor.lastResultVar = null;

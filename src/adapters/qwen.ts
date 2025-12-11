@@ -1,10 +1,10 @@
-import BaseGeneralAdapter, {type WebLLMAdapterConfig } from "./bases/BaseGeneralAdapter";
+import BaseGeneralAdapter, {type WebLLMAdapterConfig} from "./bases/BaseGeneralAdapter";
 
 export default class Qwen extends BaseGeneralAdapter {
 	name = "Qwen";
 	url = "https://www.qianwen.com/";
 
-    protected config: WebLLMAdapterConfig = {
+	protected config: WebLLMAdapterConfig = {
 		chat: {
 			new: 'span[data-icon-type="pcicon-addDialogue-line"]',
 			send: 'span:has( use[*|href="#pcicon-sendingBold-line"])',
@@ -37,8 +37,10 @@ export default class Qwen extends BaseGeneralAdapter {
 	async onLoad(): Promise<void> {
 		await this.executor
 			.delay(600)
-			.hide("button:has(> [data-icon-type='pcicon-API-line'])")
-			.hide("button:has(> [data-icon-type='pcicon-desktop-line'])")
-			.done()
+			.hide(
+				"button:has(> [data-icon-type='pcicon-API-line'])",
+				"button:has(> [data-icon-type='pcicon-desktop-line'])"
+			)
+			.done();
 	}
 }
