@@ -1,6 +1,7 @@
 import {Menu, type Plugin, setIcon, View} from "obsidian";
 import {Suggester, type SuggesterProps} from "./suggester";
 import CursorToolBar, {type CursorTool, type CursorToolBarMode} from "./CursorToolBar";
+import {ConfirmModal} from "./confirmModal";
 
 interface MenuItem {
 	title: string;
@@ -170,9 +171,14 @@ export default class UIUtils {
 		registerMenu(el, items, eventType);
 	}
 
-	async showSuggester(props: SuggesterProps) {
+	async showSuggester<T>(props: SuggesterProps<T>): Promise<T> {
 		const suggester = new Suggester(this.plugin.app, props);
 		return suggester.promise;
+	}
+
+	async showConfirmModal(title: string, content: string): Promise<boolean> {
+		const modal = new ConfirmModal(this.plugin.app, title, content);
+		return modal.promise;
 	}
 
 	setIconButton(el: HTMLElement, {icon, title, callback}: IconButton) {

@@ -12,7 +12,7 @@ type statusKeys = "busy" | "error" | "complete";
 
 export default class WebLLM {
 	adapters: WebLLMAdapter[];
-	private curAdapter: WebLLMAdapter;
+	private curAdapter: WebLLMAdapter | undefined;
 	private webView: WebView;
 	private answerStatus: StatusBarItem<statusKeys>;
 	private toolbar: CursorToolBar;
@@ -38,7 +38,9 @@ export default class WebLLM {
 			position: "right",
 			hooks: {
 				onWebviewInit: (webview) => initAdapters(this.adapters, webview.executor),
-				onDomReady: () => this.curAdapter.onLoad()
+				onNavigate: (url) =>
+					this.switchAdapter(this.adapters.find(adapter => PluginUtils.checker.isSameHost(adapter.url, url))),
+				onDomReady: () => this.curAdapter?.onLoad()
 			},
 			panelMenuItems: this.adapters.map(adapter => ({
 				title: adapter.name,
@@ -47,27 +49,26 @@ export default class WebLLM {
 			})),
 		});
 		PluginUtils.saveLocalStorage(WEB_LLM_VIEW_ID, this.webView.leaf.id);
-		const adapter = this.adapters.find(adapter => PluginUtils.checker.isSameHost(adapter.url, this.webView.url));
-		this.switchAdapter(adapter?.name, !adapter);
 		this.registerCommands();
 		this.registerEditorMenuItems();
 		this.registerStatus();
 		this.registerToolbar();
 	}
 
-	public switchAdapter(name = "Qwen", navigate = true) {
-		if (name === this.curAdapter?.name) {
+	public switchAdapter(name: string): void;
+	public switchAdapter(adapter?: WebLLMAdapter): void;
+	public switchAdapter(nameOrAdapter: string | WebLLMAdapter = "Qwen") {
+		if (typeof nameOrAdapter === "string") {
+			const adapter = this.adapters.find(adapter => adapter.name === nameOrAdapter);
+			if (!adapter) {
+				new Notice(`未找到${nameOrAdapter}适配器`);
+				return;
+			}
+			this.curAdapter = adapter;
+			this.webView?.navigate(adapter.url);
 			return;
 		}
-		const adapter = this.adapters.find(adapter => adapter.name === name);
-		if (!adapter) {
-			new Notice(`未找到${name}适配器`);
-			return;
-		}
-		this.curAdapter = adapter;
-		if (navigate) {
-			this.webView?.navigate(this.curAdapter.url);
-		}
+		this.curAdapter = nameOrAdapter;
 	}
 
 	private registerStatus() {
@@ -104,7 +105,10 @@ export default class WebLLM {
 			name: "复制最新回复为MD",
 			hotkeys: [{modifiers: ["Alt"], key: "Q"}],
 			callback: async () => {
-				const reply = await this.curAdapter.getCurrentReply();
+				const reply = await this.curAdapter?.getCurrentReply();
+				if (!reply) {
+					return;
+				}
 				await window.navigator.clipboard.writeText(reply);
 				new Notice("已复制最新回复");
 			}
@@ -121,16 +125,12 @@ export default class WebLLM {
 				title: "查询历史记录",
 				icon: "history",
 				callback: () =>
-					this.curAdapter.queryHistory(editor.getSelection())
+					this.curAdapter?.queryHistory(editor.getSelection())
 			}])
 		});
 	}
 
 	private async chat() {
-		if (!this.curAdapter) {
-			new Notice("当前适配器不可用");
-			return;
-		}
 		const view = PluginUtils.ws.getActiveViewOfType<FileView>(FileView);
 		if (!view) {
 			new Notice("不支持的视图");
@@ -142,6 +142,13 @@ export default class WebLLM {
 			return;
 		}
 		const file = await this.preprocess(selection, view);
+		if (!file) {
+			return;
+		}
+		if (!this.curAdapter) {
+			new Notice("当前适配器不可用");
+			return;
+		}
 		let notice = "回答完成！";
 		try {
 			const result = await this.curAdapter.chat(selection);
@@ -177,6 +184,12 @@ export default class WebLLM {
 			await PluginUtils.vault.createFolder(folderName);
 		}
 		const filePath = folderName + fileName + ".md";
-		return PluginUtils.vault.create(filePath, content);
+		if (!await PluginUtils.vault.exists(folderName)) {
+			return PluginUtils.vault.create(filePath, content);
+		}
+		const confirm = await PluginUtils.ui.showConfirmModal("WIKI已存在，是否重新生成？", "");
+		if (confirm) {
+			return PluginUtils.vault.create(filePath, content);
+		}
 	}
 }

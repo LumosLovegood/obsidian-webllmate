@@ -10,6 +10,7 @@ const CUSTOM_WEBVIEW_TYPE = "custom-webview";
 
 interface WebViewHooks {
 	onWebviewInit?: (webview: WebView) => void | Promise<void>;
+	onNavigate?: (url: string) => void | Promise<void>;
 	onDomReady?: () => void | Promise<void>;
 	onTitleUpdated?: (title: string) => void | Promise<void>;
 }
@@ -220,7 +221,8 @@ export default class WebViewer {
 		};
 	}
 
-	private registerWebHooks(view: WebView, {onDomReady, onTitleUpdated}: WebViewHooks) {
+	private registerWebHooks(view: WebView, {onNavigate, onDomReady, onTitleUpdated}: WebViewHooks) {
+		view.webview.addEventListener("did-start-navigation", (evt: any) => onNavigate?.(evt.url));
 		view.webview.addEventListener("dom-ready", () => onDomReady?.());
 		view.webview.addEventListener("page-title-updated", (evt: any) => onTitleUpdated?.(evt.title));
 	}

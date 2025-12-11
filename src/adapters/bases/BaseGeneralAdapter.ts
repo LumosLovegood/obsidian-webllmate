@@ -98,7 +98,7 @@ export default abstract class BaseGeneralAdapter extends BaseAdapter {
 		const WAIT_CHECK_INTERVAL = 500;
 		this.executor
 			.queryAll(this.config.reply.filter).at(-1)
-			.waitFor(this.config.reply.finishFlag, WAIT_CHECK_TIMEOUT, WAIT_CHECK_INTERVAL)
+			.waitFor(this.config.reply.finishFlag, WAIT_CHECK_TIMEOUT, WAIT_CHECK_INTERVAL);
 		return this;
 	}
 }

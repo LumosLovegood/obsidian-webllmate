@@ -37,8 +37,8 @@ export default class Qwen extends BaseGeneralAdapter {
 	async onLoad(): Promise<void> {
 		await this.executor
 			.delay(600)
-			.remove("button:has(> [data-icon-type='pcicon-API-line'])")
-			.remove("button:has(> [data-icon-type='pcicon-desktop-line'])")
+			.hide("button:has(> [data-icon-type='pcicon-API-line'])")
+			.hide("button:has(> [data-icon-type='pcicon-desktop-line'])")
 			.done()
 	}
 }

@@ -46,7 +46,7 @@ export default class WebExecutor {
 		isAsync: true,
 	}, {
 		name: "waitUntilElement",
-		definition: `async (sel, timeout, interval=200) => {
+		definition: `const waitUntilElement = async (sel, timeout, interval=200) => {
           const start = Date.now();
           while (Date.now() - start < timeout) {
             const el = document.querySelector(sel);
@@ -213,6 +213,19 @@ export default class WebExecutor {
 	}
 
 	@unifySelector
+	setStyles(selector: string, styles: Partial<CSSStyleDeclaration>): WebExecutor {
+		return this.query(selector).setStyles(styles);
+	}
+
+	hide(selector: string): WebExecutor {
+		return this.setStyles(selector, {display: "none"});
+	}
+
+	show(selector: string): WebExecutor {
+		return this.setStyles(selector, {display: ""});
+	}
+
+	@unifySelector
 	focus(selector: string): WebExecutor {
 		this.webview.focus();
 		return this.query(selector).focus();
@@ -236,7 +249,7 @@ class ElementRef {
 		const varName = `_e${this.executor['nextId']++}`;
 		const source = global ? 'document' : this.expr;
 		this.executor.statements.push(
-			`const ${varName} = ${source}.querySelector("${subSelector}");`
+			`const ${varName} = ${source}?.querySelector("${subSelector}");`
 		);
 		return new ElementRef(this.executor, varName);
 	}
@@ -269,7 +282,6 @@ class ElementRef {
     })();
     if (!${varName}) throw new Error("Timeout waiting for element: ${safeSel} inside ${this.expr}");
   `.trim());
-
 		return new ElementRef(this.executor, varName);
 	}
 
